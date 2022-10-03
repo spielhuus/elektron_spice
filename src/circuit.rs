@@ -149,13 +149,38 @@ impl Circuit {
                 let dir = entry.unwrap();
                 if dir.path().is_file() {
                     let content = fs::read_to_string(dir.path())?;
-                    let captures = RE_SUBCKT.captures(&content);
-                    if let Some(caps) = captures {
+                    if let Some(caps) = RE_SUBCKT.captures(&content) {
                         let text1 = caps.get(1).map_or("", |m| m.as_str());
                         if text1 == key {
                             result.insert(key, dir.path().to_str().unwrap().to_string());
-                            let captures = RE_INCLUDE.captures(&content);
-                            if let Some(caps) = captures {
+                            if let Some(caps) = RE_INCLUDE.captures(&content) {
+                                for cap in caps.iter().skip(1) {
+                                    let text1 = cap.map_or("", |m| m.as_str());
+                                    if !text1.contains('/') {
+                                        //when there is no slash i could be
+                                        //a relative path.
+                                        let mut parent = dir
+                                            .path()
+                                            .parent()
+                                            .unwrap()
+                                            .to_str()
+                                            .unwrap()
+                                            .to_string();
+                                        parent += "/";
+                                        parent += text1;
+                                        result.insert(text1.to_string(), parent.to_string());
+                                    } else {
+                                        result.insert(text1.to_string(), text1.to_string());
+                                    }
+                                }
+                            }
+                            return Ok(result);
+                        }
+                    } else if let Some(caps) = RE_MODEL.captures(&content) {
+                        let text1 = caps.get(1).map_or("", |m| m.as_str());
+                        if text1 == key {
+                            result.insert(key, dir.path().to_str().unwrap().to_string());
+                            if let Some(caps) = RE_INCLUDE.captures(&content) {
                                 for cap in caps.iter().skip(1) {
                                     let text1 = cap.map_or("", |m| m.as_str());
                                     if !text1.contains('/') {
@@ -325,77 +350,19 @@ impl Simulation {
         }
         map
     }
+}
 
-    /* pub fn plot(&self, name: &str, filename: Option<&str>) -> Result<(), Error> {
-
-        /* let plot = self.ngspice.current_plot().unwrap();
-        let vecs = self.ngspice.all_vecs(&plot).unwrap(); */
-        let re = self.ngspice.vector_info("time").unwrap();
-        let data1 = match re.data {
-            ComplexSlice::Real(list) => {
-                list
-            },
-            ComplexSlice::Complex(_list) => {
-                //list.into_iter().map(|f| f.parse::<f64>()).collect()
-                &[0.0]
-            }
-        };
-        let re = self.ngspice.vector_info("input").unwrap();
-        let data2 = match re.data {
-            ComplexSlice::Real(list) => {
-                list
-            },
-            ComplexSlice::Complex(_list) => {
-                //list.into_iter().map(|f| f.parse::<f64>()).collect()
-                &[0.0]
-            }
-        };
-        let re = self.ngspice.vector_info("output").unwrap();
-        let data3 = match re.data {
-            ComplexSlice::Real(list) => {
-                list
-            },
-            ComplexSlice::Complex(list) => {
-                //list.into_iter().map(|f| f.parse::<f64>()).collect()
-                &[0.0]
-            }
-        };
+#[cfg(test)]
+mod tests {
+    use crate::Circuit;
 
 
-    let root = BitMapBackend::new("0.png", (640, 480)).into_drawing_area();
-    root.fill(&WHITE).unwrap();
-    let mut chart = ChartBuilder::on(&root)
-        .caption("y=x^2", ("sans-serif", 50).into_font())
-        .margin(5)
-        .x_label_area_size(30)
-        .y_label_area_size(30)
-        .build_cartesian_2d(0f32..0.01f32, -5f32..5f32).unwrap();
-
-    chart.configure_mesh().draw().unwrap();
-
-    chart
-        .draw_series(LineSeries::new(
-            data1.iter().zip(data2.iter()).map(|(x, y)| (*x as f32, *y as f32)),
-            &RED,
-        )).unwrap()
-        .label("y = x^2");
-
-    chart
-        .draw_series(LineSeries::new(
-            data1.iter().zip(data3.iter()).map(|(x, y)| (*x as f32, *y as f32)),
-            &BLUE,
-        )).unwrap()
-        .label("y = x^2");
-        // .legend(|(x, y)| LineSeries::new(data2.iter().map(|x| *x as f32), &RED));
-
-    chart
-        .configure_series_labels()
-        .background_style(&WHITE.mix(0.8))
-        .border_style(&BLACK)
-        .draw().unwrap();
-
-    root.present().unwrap();
-
-    Ok(())
-    } */
+    #[test]
+    fn load_model() {
+        let circuit = Circuit::new(String::from("test"), vec![String::from("files/spice/")]);
+        let include = circuit.get_includes(String::from("TL072")).unwrap();
+        assert_eq!("files/spice/TL072.lib", include.get("TL072").unwrap());
+        let include = circuit.get_includes(String::from("BC547B")).unwrap();
+        assert_eq!("files/spice/BC547.mod", include.get("BC547B").unwrap());
+    }
 }
