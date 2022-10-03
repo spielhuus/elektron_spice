@@ -16,7 +16,7 @@ lazy_static! {
     pub static ref RE_INCLUDE: regex::Regex = Regex::new(r"(?i:\.include) (.*)").unwrap();
 }
 
-struct Cb {
+pub struct Cb {
     strs: Vec<String>,
 }
 impl Callbacks for Cb {
@@ -261,8 +261,8 @@ impl Circuit {
 }
 
 pub struct Simulation {
-    circuit: Circuit,
-    ngspice: std::sync::Arc<NgSpice<Cb>>,
+    pub circuit: Circuit,
+    pub ngspice: std::sync::Arc<NgSpice<Cb>>,
 }
 
 /// simulate the circuit with ngspice
