@@ -195,6 +195,13 @@ impl Circuit {
                         includes.entry(key).or_insert(value);
                     }
                 }
+            } else if let CircuitItem::Q(_, _, _, _, value) = item {
+                if !includes.contains_key(value) && !self.subcircuits.contains_key(value) {
+                    let incs = self.get_includes(value.to_string()).unwrap();
+                    for (key, value) in incs {
+                        includes.entry(key).or_insert(value);
+                    }
+                }
             }
         }
         let mut result = Vec::new();
