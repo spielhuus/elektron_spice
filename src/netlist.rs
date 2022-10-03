@@ -445,6 +445,28 @@ impl<'a> Netlist<'a> {
                                 spice_model.unwrap()
                             );
                         }
+                    } else if primitive == "Q" {
+                        let mut seq_string = String::new();
+                        for seq in pin_sequence {
+                            let real_pin = (&seq + 1).to_string();
+                            let pin = my_pins.get(&real_pin).unwrap();
+                            //get the symbol from the unit number
+                            for s in symbols.iter() {
+                                if s.unit == pin.1 {
+                                    let pts = Shape::transform(*s, &pin.0.at);
+                                    let p0 = Point::new(pts[0], pts[1]);
+
+                                    if let Some(node_name) = self.node_name(&p0) {
+                                        seq_string += &node_name;
+                                    } else {
+                                        seq_string += "NaN"
+                                    }
+                                    seq_string += " ";
+                                }
+                            }
+                        }
+                        let nodes: Vec<String> = seq_string.split(' ').map(|s| s.to_string()).collect();
+                        circuit.bjt(reference.to_string(), nodes[0].clone(), nodes[1].clone(), nodes[2].clone(), spice_model.unwrap());
                     } else {
                         println!("-> {}{} - - {}", primitive, reference, spice_value.unwrap());
                     }
