@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install native dependencies
+        run: |
+            sudo apt-get install -y -qq libngspice0 libngspice0-dev
       - uses: actions/checkout@v2
       - name: Build
         run: cargo build --verbose
