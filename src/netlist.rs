@@ -542,7 +542,7 @@ mod tests {
 
     #[test]
     fn test_next_pos() {
-        let schema = Schema::load("samples/files/summe/summe.kicad_sch").unwrap();
+        let schema = Schema::load("files/summe/summe.kicad_sch").unwrap();
         let netlist = Netlist::from(&schema).unwrap();
         let mut nodes: Vec<Node> = Vec::new();
         for (reference, symbols) in &netlist.symbols {
@@ -582,30 +582,30 @@ mod tests {
     }
     #[test]
     fn used_elements() {
-        let schema = Schema::load("samples/files/summe/summe.kicad_sch").unwrap();
+        let schema = Schema::load("files/summe/summe.kicad_sch").unwrap();
         let netlist = Netlist::from(&schema).unwrap();
         assert_eq!(14, netlist.used_elements.len());
     }
     #[test]
     fn test_unconnected() {
-        let schema = Schema::load("samples/files/summe/summe_unconnected.kicad_sch").unwrap();
+        let schema = Schema::load("files/summe/summe_unconnected.kicad_sch").unwrap();
         let netlist = Netlist::from(&schema).unwrap();
         let res = netlist.erc();
         assert_eq!(1, res.len());
     }
     #[test]
     fn test_check() {
-        let schema = Schema::load("samples/files/summe/summe.kicad_sch").unwrap();
+        let schema = Schema::load("files/summe/summe.kicad_sch").unwrap();
         let netlist = Netlist::from(&schema).unwrap();
         assert_eq!(0, netlist.erc().len());
     }
     #[test]
     fn test_circuit() {
-        let schema = Schema::load("samples/files/summe/summe.kicad_sch").unwrap();
+        let schema = Schema::load("files/summe/summe.kicad_sch").unwrap();
         let netlist = Netlist::from(&schema).unwrap();
         let mut circuit = Circuit::new(
             String::from("summe"),
-            vec![String::from("samples/files/spice/")],
+            vec![String::from("files/spice/")],
         );
         netlist.circuit(&mut circuit).unwrap();
         circuit.save(None).unwrap();
