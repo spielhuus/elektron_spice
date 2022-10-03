@@ -7,8 +7,8 @@ use ndarray::Array1;
 
 use crate::error::Error;
 use elektron_sexp::{
-        model::{Pin, SchemaElement, Symbol, Wire},
-        schema::Schema, shape::{Shape, Transform},
+        Pin, SchemaElement, Symbol, Wire,
+        Schema, Shape, Transform,
 };
 
 use super::Circuit;
@@ -538,7 +538,7 @@ mod tests {
     use crate::{
         netlist::Point, Circuit,
     };
-    use elektron_sexp::{schema::Schema, shape::Shape, shape::Transform};
+    use elektron_sexp::{Schema, Shape, Transform};
 
     #[test]
     fn test_next_pos() {
