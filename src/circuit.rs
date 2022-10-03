@@ -290,7 +290,7 @@ impl Simulation {
             ngspice: NgSpice::new(c).unwrap(),
         }
     }
-    fn tran(&self, step: &str, stop: &str, start: &str) -> HashMap<String, Vec<f64>> {
+    pub fn tran(&self, step: &str, stop: &str, start: &str) -> HashMap<String, Vec<f64>> {
         let circ = self.circuit.to_str(true).unwrap();
         self.ngspice.circuit(circ).unwrap();
         self.ngspice
