@@ -1,6 +1,6 @@
 [package]
 name = "elektron_spice"
-version = "0.1.10"
+version = "0.1.11"
 edition = "2021"
 description = "Rust parser and models for Kicad Version."
 license = "MIT OR Apache-2.0"
@@ -10,7 +10,7 @@ repository = "https://github.com/spielhuus/elektron_spice"
 name = "elektron_spice"
 
 [dependencies]
-elektron_sexp = "0.1.5"
+elektron_sexp = "0.1.6"
 elektron_ngspice = "0.1.0"
 thiserror = "1.0.32"
 lazy_static = "1.4.0"
