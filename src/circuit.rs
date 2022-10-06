@@ -338,10 +338,15 @@ impl Simulation {
                 let name = r.name;
                 let data1 = match r.data {
                     ComplexSlice::Real(list) => list.iter().map(|i| *i).collect(),
-                    ComplexSlice::Complex(_list) => {
-                        //list.into_iter().map(|f| f.parse::<f64>()).collect()
-                        println!("found complex list"); //TODO use this result
-                        vec![0.0]
+                    ComplexSlice::Complex(list) => {
+                        list.iter().map(|f| {
+                            if !f.cx_real.is_nan() {
+                                f.cx_real
+                            } else if !f.cx_imag.is_nan() {
+                                f.cx_imag
+                            } else {
+                                todo!("can not get value from comples: {:?}", f);
+                            }}).collect()
                     }
                 };
                 map.insert(name, data1);
