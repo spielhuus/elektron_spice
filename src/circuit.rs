@@ -149,8 +149,8 @@ impl Circuit {
                 let dir = entry.unwrap();
                 if dir.path().is_file() {
                     let content = fs::read_to_string(dir.path())?;
-                    if let Some(caps) = RE_SUBCKT.captures(&content) {
-                        let text1 = caps.get(1).map_or("", |m| m.as_str());
+                    for cap in RE_SUBCKT.captures_iter(&content) {
+                        let text1 = cap.get(1).map_or("", |m| m.as_str());
                         if text1 == key {
                             result.insert(key, dir.path().to_str().unwrap().to_string());
                             if let Some(caps) = RE_INCLUDE.captures(&content) {
@@ -176,8 +176,9 @@ impl Circuit {
                             }
                             return Ok(result);
                         }
-                    } else if let Some(caps) = RE_MODEL.captures(&content) {
-                        let text1 = caps.get(1).map_or("", |m| m.as_str());
+                    }
+                    for cap in RE_MODEL.captures_iter(&content) {
+                        let text1 = cap.get(1).map_or("", |m| m.as_str());
                         if text1 == key {
                             result.insert(key, dir.path().to_str().unwrap().to_string());
                             if let Some(caps) = RE_INCLUDE.captures(&content) {
@@ -356,7 +357,6 @@ impl Simulation {
 mod tests {
     use crate::Circuit;
 
-
     #[test]
     fn load_model() {
         let circuit = Circuit::new(String::from("test"), vec![String::from("files/spice/")]);
@@ -364,5 +364,7 @@ mod tests {
         assert_eq!("files/spice/TL072.lib", include.get("TL072").unwrap());
         let include = circuit.get_includes(String::from("BC547B")).unwrap();
         assert_eq!("files/spice/BC547.mod", include.get("BC547B").unwrap());
+        let include = circuit.get_includes(String::from("BC556B")).unwrap();
+        assert_eq!("files/spice/bc5x7.lib", include.get("BC556B").unwrap());
     }
 }
