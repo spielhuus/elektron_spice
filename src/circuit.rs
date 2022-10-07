@@ -345,13 +345,47 @@ impl Simulation {
                             } else if !f.cx_imag.is_nan() {
                                 f.cx_imag
                             } else {
-                                todo!("can not get value from comples: {:?}", f);
+                                todo!("can not get value from complex: {:?}", f);
                             }}).collect()
                     }
                 };
                 map.insert(name, data1);
             } else {
                 panic!("Can not run tran with schema.");
+            }
+        }
+        map
+    }
+    pub fn ac(&self, start_frequency: &str, stop_frequency: &str, number_of_points: u32,  variation: &str) -> HashMap<String, Vec<f64>> {
+        let circ = self.circuit.to_str(true).unwrap();
+        self.ngspice.circuit(circ).unwrap();
+        self.ngspice
+            //DEC ND FSTART FSTOP
+            .command(format!("ac {} {} {} {}", variation, number_of_points, start_frequency, stop_frequency).as_str())
+            .unwrap(); //TODO
+        let plot = self.ngspice.current_plot().unwrap();
+        let res = self.ngspice.all_vecs(plot.as_str()).unwrap();
+        let mut map: HashMap<String, Vec<f64>> = HashMap::new();
+        for name in res {
+            let re = self.ngspice.vector_info(name.as_str());
+            if let Ok(r) = re {
+                let name = r.name;
+                let data1 = match r.data {
+                    ComplexSlice::Real(list) => list.iter().map(|i| *i).collect(),
+                    ComplexSlice::Complex(list) => {
+                        list.iter().map(|f| {
+                            if !f.cx_real.is_nan() {
+                                f.cx_real
+                            } else if !f.cx_imag.is_nan() {
+                                f.cx_imag
+                            } else {
+                                todo!("can not get value from complex: {:?}", f);
+                            }}).collect()
+                    }
+                };
+                map.insert(name, data1);
+            } else {
+                panic!("Can not run ac with schema.");
             }
         }
         map
