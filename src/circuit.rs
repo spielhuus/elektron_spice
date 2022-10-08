@@ -18,13 +18,33 @@ lazy_static! {
 
 pub struct Cb {
     strs: Vec<String>,
+    status: i32, 
+    unload: bool,
+    quit: bool,
 }
+
+impl Cb {
+    pub fn new() -> Self {
+        Self {
+            strs: Vec::new(),
+            status: 0,
+            unload: false,
+            quit: false,
+        }
+    }
+}
+
 impl Callbacks for Cb {
     fn send_char(&mut self, s: &str) {
         if std::env::var("ELEKTRON_DEBUG").is_ok() {
             println!("{}", s);
         }
         self.strs.push(s.to_string())
+    }
+    fn controlled_exit(&mut self, status: i32, unload: bool, quit: bool) {
+        self.status = status;
+        self.unload = unload;
+        self.quit = quit;
     }
 }
 #[derive(Debug, Clone, PartialEq)]
@@ -295,7 +315,7 @@ impl Circuit {
 
 pub struct Simulation {
     pub circuit: Circuit,
-    pub ngspice: std::sync::Arc<NgSpice<Cb>>,
+    pub buffer: Option<Vec<String>>,
 }
 
 /// simulate the circuit with ngspice
@@ -317,23 +337,25 @@ impl Simulation {
     } */
 
     pub fn new(circuit: Circuit) -> Self {
-        let c = Cb { strs: Vec::new() };
         Self {
             circuit,
-            ngspice: NgSpice::new(c).unwrap(),
+            buffer: None,
         }
     }
-    pub fn tran(&self, step: &str, stop: &str, start: &str) -> HashMap<String, Vec<f64>> {
+
+    pub fn tran(&mut self, step: &str, stop: &str, start: &str) -> HashMap<String, Vec<f64>> {
+        let mut c = Cb::new();
+        let ngspice = NgSpice::new(&mut c).unwrap();
         let circ = self.circuit.to_str(true).unwrap();
-        self.ngspice.circuit(circ).unwrap();
-        self.ngspice
+        ngspice.circuit(circ).unwrap();
+        ngspice
             .command(format!("tran {} {} {}", step, stop, start).as_str())
             .unwrap(); //TODO
-        let plot = self.ngspice.current_plot().unwrap();
-        let res = self.ngspice.all_vecs(plot.as_str()).unwrap();
+        let plot = ngspice.current_plot().unwrap();
+        let res = ngspice.all_vecs(plot.as_str()).unwrap();
         let mut map: HashMap<String, Vec<f64>> = HashMap::new();
         for name in res {
-            let re = self.ngspice.vector_info(name.as_str());
+            let re = ngspice.vector_info(name.as_str());
             if let Ok(r) = re {
                 let name = r.name;
                 let data1 = match r.data {
@@ -354,20 +376,24 @@ impl Simulation {
                 panic!("Can not run tran with schema.");
             }
         }
+        println!("tran return: {}, {}, {}", c.status, c.unload, c.quit);
+        self.buffer = Some(c.strs.clone());
         map
     }
-    pub fn ac(&self, start_frequency: &str, stop_frequency: &str, number_of_points: u32,  variation: &str) -> HashMap<String, Vec<f64>> {
+    pub fn ac(&mut self, start_frequency: &str, stop_frequency: &str, number_of_points: u32,  variation: &str) -> HashMap<String, Vec<f64>> {
+        let mut c = Cb::new();
+        let ngspice = NgSpice::new(&mut c).unwrap();
         let circ = self.circuit.to_str(true).unwrap();
-        self.ngspice.circuit(circ).unwrap();
-        self.ngspice
+        ngspice.circuit(circ).unwrap();
+        ngspice
             //DEC ND FSTART FSTOP
             .command(format!("ac {} {} {} {}", variation, number_of_points, start_frequency, stop_frequency).as_str())
             .unwrap(); //TODO
-        let plot = self.ngspice.current_plot().unwrap();
-        let res = self.ngspice.all_vecs(plot.as_str()).unwrap();
+        let plot = ngspice.current_plot().unwrap();
+        let res = ngspice.all_vecs(plot.as_str()).unwrap();
         let mut map: HashMap<String, Vec<f64>> = HashMap::new();
         for name in res {
-            let re = self.ngspice.vector_info(name.as_str());
+            let re = ngspice.vector_info(name.as_str());
             if let Ok(r) = re {
                 let name = r.name;
                 let data1 = match r.data {
@@ -388,6 +414,8 @@ impl Simulation {
                 panic!("Can not run ac with schema.");
             }
         }
+        println!("ac return: {}, {}, {}", c.status, c.unload, c.quit);
+        self.buffer = Some(c.strs.clone());
         map
     }
 }
