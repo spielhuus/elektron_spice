@@ -343,9 +343,11 @@ impl<'a> Netlist<'a> {
                     let p1 = Point::new(wire.pts.row(1)[0], wire.pts.row(1)[1]);
                     if let Some(nextpos) = if p0 == pos {
                         used_wires.push(wire);
+                        points.push(p1);
                         Some(p1)
                     } else if p1 == pos {
                         used_wires.push(wire);
+                        points.push(p0);
                         Some(p0)
                     } else {
                         None
@@ -587,18 +589,28 @@ mod tests {
             }
         }
         assert_eq!(2, nodes.len());
-        assert_eq!(3, nodes[0].points.len());
+        assert_eq!(7, nodes[0].points.len());
         assert_eq!(
             vec![
-                Point::new(96.52, 45.72),
-                Point::new(95.25, 45.72),
-                Point::new(101.6, 45.72)
+                Point::new(96.52, 33.02 ),
+                Point::new(96.52, 45.72 ),
+                Point::new(96.52, 45.72 ),
+                Point::new(95.25, 45.72 ),
+                Point::new(95.25, 45.72 ),
+                Point::new(101.6, 45.72 ),
+                Point::new(101.6, 45.72 ),
             ],
             nodes[0].points
         );
-        assert_eq!(2, nodes[1].points.len());
+        assert_eq!(5, nodes[1].points.len());
         assert_eq!(
-            vec![Point::new(80.01, 43.18), Point::new(77.47, 43.18)],
+            vec![
+                Point::new(80.01, 33.02 ),
+                Point::new(80.01, 43.18 ),
+                Point::new(80.01, 43.18 ),
+                Point::new(77.47, 43.18 ),
+                Point::new(77.47, 43.18 ),
+            ],
             nodes[1].points
         );
     }
