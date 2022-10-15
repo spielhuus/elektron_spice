@@ -322,7 +322,7 @@ impl<'a> Netlist<'a> {
         }
         false
     }
-    fn node_name(&self, point: &Point) -> Option<String> {
+    pub fn node_name(&self, point: &Point) -> Option<String> {
         for n in &self.nodes {
             if n.points.contains(point) {
                 return n.identifier.clone();
